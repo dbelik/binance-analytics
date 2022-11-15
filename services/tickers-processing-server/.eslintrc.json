@@ -1,0 +1,30 @@
+{
+  "env": {
+    "es2021": true,
+    "node": true
+  },
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaVersion": 2022
+  },
+  "extends": [
+    "google",
+    "plugin:security/recommended",
+    "prettier",
+    "plugin:jsdoc/recommended",
+    "plugin:promise/recommended"
+  ],
+  "ignorePatterns": ["build/**/*.js", "node_modules/**/*"],
+  "rules": {
+    "jsdoc/require-returns": 0,
+    "jsdoc/require-returns-description": 0,
+    "new-cap": 0
+  },
+  "settings": {
+    "jsdoc": {
+      "tagNamePreference": {
+        "returns": "return"
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  # Static code analysis tool that scans the entire project.
+  &checkov-analyzer checkov-analyzer:
+    hostname: *checkov-analyzer
+    container_name: *checkov-analyzer
+    image: bridgecrew/checkov:2.1.192-pyston
+    working_dir: "/var/codebase"
+    user: "$CURRENT_USER_ID:$CURRENT_GROUP_ID"
+    command: "-d /var/codebase --include-all-checkov-policies --quiet --skip-check CKV_OPENAPI_4 --skip-check CKV_OPENAPI_5 --skip-check CKV_DOCKER_9"
+    profiles:
+      - "ignore"
+    volumes:
+      - "${BASE_DIR}:/var/codebase:ro"
+    cpu_shares: 128
+    extends:
+      file: "settings.security.yml"
+      service: "max-restrictions"
+    
+  # Tool that analyzes secrets leakages.
+  &gitleaks-analyzer gitleaks-analyzer:
+    hostname: *gitleaks-analyzer
+    container_name: *gitleaks-analyzer
+    user: "$CURRENT_USER_ID:$CURRENT_GROUP_ID"
+    working_dir: "/var/codebase"
+    image: "zricethezav/gitleaks:v8.12.0"
+    command: "detect -s /var/codebase"
+    profiles:
+      - "ignore"
+    volumes:
+      - "${BASE_DIR}:/var/codebase:ro"
+    cpu_shares: 128
+    extends:
+      file: "settings.security.yml"
+      service: "max-restrictions"

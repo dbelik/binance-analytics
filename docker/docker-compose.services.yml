@@ -1,0 +1,69 @@
+version: "3.8"
+
+networks:
+  &tickers-cache-network tickers-cache-network:
+  &tickers-storage-network tickers-storage-network:
+
+volumes:
+  tickers-cache-volume:
+  tickers-storage-volume:
+
+services:
+  # Tickers cache that temporarily stores tickers from Binance, which
+  # are later used to fill the tickers database.
+  &tickers-cache tickers-cache:
+    hostname: *tickers-cache
+    container_name: *tickers-cache
+    image: "redis:7.0.5-alpine3.16"
+    user: "redis:redis"
+    command: >
+      "--requirepass ${TICKERS_CACHE_PASSWORD}"
+    cpu_shares: 512
+    networks:
+      - *tickers-cache-network
+    expose:
+      - "6379"
+    volumes:
+      - "tickers-cache-volume:/data"
+    extends:
+      file: "settings.security.yml"
+      service: "max-restrictions"
+
+  # Stores tickers data.
+  &tickers-storage tickers-storage:
+    hostname: *tickers-storage
+    container_name: *tickers-storage
+    image: "postgres:15.1-alpine3.16"
+    volumes:
+      - "tickers-storage-volume:/var/lib/postgresql/data:rw"
+      - "${BASE_DIR}/services/tickers-storage/initdb/:/docker-entrypoint-initdb.d/:ro"
+    environment:
+      POSTGRES_USER: "${TICKERS_DATABASE_SUPERUSER}"
+      POSTGRES_PASSWORD: "${TICKERS_DATABASE_SUPERUSER_PASSWORD}"
+      POSTGRES_DB: "${TICKERS_DATABASE_NAME}"
+    networks:
+      - *tickers-storage-network
+    cpu_shares: 512
+    extends:
+      file: "settings.security.yml"
+      service: "general-configs"
+
+  # Retrieves and stores tickers from Binance.
+  &tickers-processing-server tickers-processing-server:
+    hostname: *tickers-processing-server
+    container_name: *tickers-processing-server
+    image: "node:19.0.1-alpine3.16"
+    working_dir: "/home/node/tickers-processing-server"
+    command: "npm run start"
+    volumes:
+      - "${BASE_DIR}/services/tickers-processing-server:/home/node/tickers-processing-server:rw"
+    networks:
+      - *tickers-cache-network
+      - *tickers-storage-network
+    cpu_shares: 1024
+    depends_on:
+      - *tickers-cache
+      - *tickers-storage
+    extends:
+      file: "settings.security.yml"
+      service: "general-configs"

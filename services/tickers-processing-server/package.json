@@ -1,0 +1,49 @@
+{
+  "name": "tickers-processing-server",
+  "version": "1.0.0",
+  "description": "Server that processes Binance tickers and stores them in the database",
+  "license": "MIT",
+  "scripts": {
+    "watch:server": "esbuild sources/index.js sources/tickers.js sources/persist.js --sourcemap --platform=node --outdir=build/server --watch --target=es2020 --format=cjs --log-level=debug --external:./node_modules/* --bundle",
+    "watch:build": "nodemon --watch build -L build/server/index.js",
+    "watch": "concurrently npm:watch:*",
+    "analyze:lint": "eslint --ext .ts,.js --quiet --fix sources scripts",
+    "analyze:scan": "node scripts/analyze_scan",
+    "analyze:format": "prettier --write \"sources/**/*.(js|ts)\" \"./*.(js|ts|json)\"",
+    "analyze:outdated": "npm outdated",
+    "analyze:scripts": "allow-scripts auto",
+    "build:server": "esbuild sources/index.js sources/tickers.js sources/persist.js --platform=node --outdir=build/server --minify-whitespace --minify-identifiers --minify-syntax --target=es2022 --format=cjs --external:./node_modules/* --bundle --log-level=silent",
+    "start": "node build/server/index.js"
+  },
+  "engines": {
+    "node": "= 19.x"
+  },
+  "lavamoat": {
+    "allowScripts": {
+      "esbuild": false,
+      "nodemon": false,
+      "ccxt": false
+    }
+  },
+  "devDependencies": {
+    "@lavamoat/allow-scripts": "^2.0.3",
+    "concurrently": "^7.3.0",
+    "esbuild": "^0.15.14",
+    "eslint": "^8.20.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-jsdoc": "^39.3.3",
+    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-security": "^1.5.0",
+    "nodemon": "^2.0.19",
+    "prettier": "^2.7.1",
+    "snyk": "^1.992.0"
+  },
+  "dependencies": {
+    "ccxt": "^2.1.79",
+    "ccxws": "^0.47.0",
+    "dotenv": "^16.0.3",
+    "redis": "^4.5.0",
+    "slonik": "^31.4.2"
+  }
+}

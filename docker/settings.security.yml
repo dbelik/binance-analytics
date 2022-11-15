@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  # Resource limits.
+  general-deploy-limit: &general-deploy-limit
+    resources:
+      limits:
+        cpus: "1"
+        memory: 512M
+        pids: 4096
+      reservations:
+        cpus: "0.25"
+        memory: 256M
+
+  general-configs: &general-configs
+    restart: on-failure:5
+    stop_grace_period: 2s
+    rollback_config:
+      delay: 0s
+      failure_action: pause
+      max_failure_ratio: 0
+      monitor: 0s
+      order: stop-first
+      parallelism: 1
+    update_config:
+      delay: 10s
+      failure_action: pause
+      max_failure_ratio: 0
+      monitor: 0s
+      order: stop-first
+      parallelism: 1
+    # deploy:
+    #   <<: *general-deploy-limit
+
+  drop-permissions: &drop-permissions
+    cap_drop:
+      - ALL
+    <<: *general-configs
+
+  max-restrictions: &max-restrictions
+    security_opt:
+      - "no-new-privileges"
+      - "apparmor=docker-default"
+    <<: *drop-permissions
